@@ -35,6 +35,7 @@ import java.net.URL
 import kotlin.concurrent.thread
 import com.prof.rssparser.Parser
 import androidx.lifecycle.coroutineScope;
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -60,6 +61,7 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     var download by remember { mutableStateOf<String?>(null) }
+                    var showDialog by remember { mutableStateOf(true) }
                     GlobalScope.launch {
                         try {
                             val site = URL("https://raw.githubusercontent.com/RitariME/PolkkaRuokalistat/master/version").readText().split("\n");
@@ -67,25 +69,24 @@ class MainActivity : ComponentActivity() {
                                 download = site[1];
                             }
                         }
-                        catch (e: Exception) { }
+                        catch (e: Exception) {
+                            println(e);
+                        }
                     }
-                    val con = LocalContext.current;
-                    if (download != null && (getSetting(con, "update") ?: version) < version) {
+                    if (download != null && showDialog) {
                         AlertDialog(
-                            onDismissRequest = { download = null },
+                            onDismissRequest = { showDialog = false },
                             title = { Text("Lataa uusi versio!") },
-                            text = { Text("Kannataa ladata uusin versio.\nJos et halua päivittää nyt, voit kumminkin päivittää myöhemmin sovelluksen asetuksista.") },
+                            text = { Text("Kannataa ladata uusin versio.\nVoit päivittää myös myöhemmin.") },
                             confirmButton = {
                                 Button(onClick = {
-                                    download = null;
-                                    saveSetting(con, "update", version);
+                                    showDialog = false;
                                 }
                                 ) {
                                     Text("Myöhemmin")
                                 }
                                 Button(onClick = {
-                                    download = null;
-                                    saveSetting(con, "update", version);
+                                    showDialog = false;
                                     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(download))
                                     startActivity(intent)
                                 }
